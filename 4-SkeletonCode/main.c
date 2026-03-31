@@ -7,7 +7,9 @@ int main(int argc, char *argv[]) {
     // uint img_size;
 
     if (argc < 2) {
-        printf("Add valid options use -h to know more about the options");
+        fprintf(
+            stderr,
+            "ERROR: Add valid options use -h to know more about the options\n");
         return 0;
     }
     OperationType ret = check_operation_type(argv[1]);

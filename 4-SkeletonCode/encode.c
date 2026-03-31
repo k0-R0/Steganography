@@ -29,6 +29,12 @@ uint get_image_size_for_bmp(FILE *fptr_image) {
     return width * height * 3;
 }
 
+uint get_file_size(FILE *fptr) {
+    fseek(fptr, 0, SEEK_END);
+    uint size = ftell(fptr);
+    rewind(fptr);
+    return size;
+}
 /*
  * Get File pointers for i/p and o/p files
  * Inputs: Src Image file, Secret file and
@@ -114,7 +120,8 @@ Status read_and_validate_encode_args(char **argv, EncodeInfo *encInfo) {
 
 Status check_capacity(EncodeInfo *encInfo) {
     // compare rgb data size to encoded text size
-    uint secret_size = 0;
+    encInfo->size_secret_file = get_file_size(encInfo->fptr_secret);
+    uint secret_size = encInfo->size_secret_file + 4;
     uint file_size = get_image_size_for_bmp(encInfo->fptr_src_image);
 
     // encoded text size =
@@ -131,9 +138,18 @@ Status check_capacity(EncodeInfo *encInfo) {
     secret_size += extensionLen + 1;
     // file size + 1 int (4 bytes) to represent file size
 
-    secret_size += encInfo->size_secret_file + 4;
-
     if (file_size < secret_size * 8)
+        return e_failure;
+    return e_success;
+}
+
+Status copy_bmp_header(FILE *fptr_src_image, FILE *fptr_dest_image) {
+    char header_buffer[BMP_HEADER_SIZE];
+    if (fread(header_buffer, sizeof(char), BMP_HEADER_SIZE, fptr_src_image) <
+        BMP_HEADER_SIZE)
+        return e_failure;
+    if (fwrite(header_buffer, sizeof(char), BMP_HEADER_SIZE, fptr_dest_image) <
+        BMP_HEADER_SIZE)
         return e_failure;
     return e_success;
 }
@@ -144,6 +160,9 @@ Status do_encoding(EncodeInfo *encInfo) {
         return e_failure;
     // validate file size - header size > encode data size
     if (check_capacity(encInfo) == e_failure)
+        return e_failure;
+    if (copy_bmp_header(encInfo->fptr_src_image, encInfo->fptr_stego_image) ==
+        e_failure)
         return e_failure;
     // encode magic
     // encode extension size

@@ -14,6 +14,7 @@
 #define MAX_SECRET_BUF_SIZE 1
 #define MAX_IMAGE_BUF_SIZE (MAX_SECRET_BUF_SIZE * 8)
 #define MAX_FILE_SUFFIX 4
+#define BMP_HEADER_SIZE 54
 
 typedef struct _EncodeInfo {
     /* Source Image info */
@@ -28,7 +29,7 @@ typedef struct _EncodeInfo {
     FILE *fptr_secret;
     char extn_secret_file[MAX_FILE_SUFFIX];
     char secret_data[MAX_SECRET_BUF_SIZE];
-    long size_secret_file;
+    uint size_secret_file;
 
     /* Stego Image Info */
     char *stego_image_fname;
