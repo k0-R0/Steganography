@@ -1,4 +1,5 @@
 #include "encode.h"
+#include "logs.h"
 #include "types.h"
 #include <stdio.h>
 #include <string.h>
@@ -12,6 +13,7 @@
  * and height after that. size is 4 bytes
  */
 uint get_image_size_for_bmp(FILE *fptr_image) {
+    LOG_INFO(INFO_CHECK_RGB_DATA_SIZE);
     uint width, height;
     // Seek to 18th byte
     fseek(fptr_image, 18, SEEK_SET);
@@ -30,6 +32,7 @@ uint get_image_size_for_bmp(FILE *fptr_image) {
 }
 
 uint get_file_size(FILE *fptr) {
+    LOG_INFO(INFO_CHECK_SECRET_SIZE);
     fseek(fptr, 0, SEEK_END);
     uint size = ftell(fptr);
     rewind(fptr);
@@ -44,12 +47,12 @@ uint get_file_size(FILE *fptr) {
  */
 Status open_files(EncodeInfo *encInfo) {
     // Src Image file
+    LOG_INFO(INFO_OPEN_FILES);
     encInfo->fptr_src_image = fopen(encInfo->src_image_fname, "r");
     // Do Error handling
     if (encInfo->fptr_src_image == NULL) {
         perror("fopen");
-        fprintf(stderr, "ERROR: Unable to open file %s\n",
-                encInfo->src_image_fname);
+        LOG_ERROR(ERR_OPEN_BMP);
 
         return e_failure;
     }
@@ -59,8 +62,7 @@ Status open_files(EncodeInfo *encInfo) {
     // Do Error handling
     if (encInfo->fptr_secret == NULL) {
         perror("fopen");
-        fprintf(stderr, "ERROR: Unable to open file %s\n",
-                encInfo->secret_fname);
+        LOG_ERROR(ERR_OPEN_SECRET);
 
         return e_failure;
     }
@@ -70,9 +72,7 @@ Status open_files(EncodeInfo *encInfo) {
     // Do Error handling
     if (encInfo->fptr_stego_image == NULL) {
         perror("fopen");
-        fprintf(stderr, "ERROR: Unable to open file %s\n",
-                encInfo->stego_image_fname);
-
+        LOG_ERROR(ERR_OPEN_OUTPUT);
         return e_failure;
     }
 
@@ -81,6 +81,7 @@ Status open_files(EncodeInfo *encInfo) {
 }
 
 OperationType check_operation_type(char *arg) {
+    LOG_INFO(INFO_CHECK_OPERATION);
     if (strcmp(arg, "-e") == 0)
         return e_encode;
     else if (strcmp(arg, "-d") == 0)
@@ -91,20 +92,25 @@ OperationType check_operation_type(char *arg) {
 
 Status read_and_validate_encode_args(char **argv, EncodeInfo *encInfo) {
     // check .bmp file
+    LOG_INFO(INFO_CHECK_ARGUMENTS);
 
     if (strstr(argv[2], ".bmp") == NULL) {
-        printf("%s", argv[2]);
+        LOG_ERROR(ERR_INVALID_BMP);
         return e_failure;
     }
     // check . present in secret file
 
-    if (strchr(argv[3], '.') == NULL)
+    if (strchr(argv[3], '.') == NULL) {
+        LOG_ERROR(ERR_INVALID_SECRET);
         return e_failure;
+    }
     // check if output file is present
     // if not default
 
-    if (argv[4] && strstr(argv[4], ".bmp") == NULL)
+    if (argv[4] && strstr(argv[4], ".bmp") == NULL) {
+        LOG_ERROR(ERR_INVALID_OUTPUT);
         return e_failure;
+    }
     // else validate it to be .bmp file as well
 
     encInfo->src_image_fname = argv[2];
@@ -138,32 +144,46 @@ Status check_capacity(EncodeInfo *encInfo) {
     secret_size += extensionLen + 1;
     // file size + 1 int (4 bytes) to represent file size
 
-    if (file_size < secret_size * 8)
+    LOG_INFO(INFO_CHECK_CAPACITY);
+    if (file_size < secret_size * 8) {
+        LOG_ERROR(ERR_INSUFFICIENT_CAPACITY);
         return e_failure;
+    }
+    LOG_INFO(INFO_CAPACITY_OK);
     return e_success;
 }
 
 Status copy_bmp_header(FILE *fptr_src_image, FILE *fptr_dest_image) {
+    LOG_INFO(INFO_COPY_HEADER);
     char header_buffer[BMP_HEADER_SIZE];
     if (fread(header_buffer, sizeof(char), BMP_HEADER_SIZE, fptr_src_image) <
-        BMP_HEADER_SIZE)
+        BMP_HEADER_SIZE) {
         return e_failure;
+    }
     if (fwrite(header_buffer, sizeof(char), BMP_HEADER_SIZE, fptr_dest_image) <
-        BMP_HEADER_SIZE)
+        BMP_HEADER_SIZE) {
         return e_failure;
+    }
     return e_success;
 }
 
 Status do_encoding(EncodeInfo *encInfo) {
     // open files
-    if (open_files(encInfo) == e_failure)
+    LOG_INFO(INFO_ENCODING_START);
+    if (open_files(encInfo) == e_failure) {
+        LOG_ERROR(ERR_OPEN_FILES);
         return e_failure;
+    }
     // validate file size - header size > encode data size
-    if (check_capacity(encInfo) == e_failure)
+    if (check_capacity(encInfo) == e_failure) {
+        LOG_ERROR(ERR_CAPACITY_CHECK);
         return e_failure;
+    }
     if (copy_bmp_header(encInfo->fptr_src_image, encInfo->fptr_stego_image) ==
-        e_failure)
+        e_failure) {
+        LOG_ERROR(ERR_COPY_HEADER);
         return e_failure;
+    }
     // encode magic
     // encode extension size
     // encode extension name
