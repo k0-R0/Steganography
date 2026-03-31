@@ -2,3 +2,4 @@
 *.txt
 /build
 .cache
+/4-SkeletonCode/stego_img.bmp
