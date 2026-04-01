@@ -167,6 +167,14 @@ Status copy_bmp_header(FILE *fptr_src_image, FILE *fptr_dest_image) {
     return e_success;
 }
 
+Status encode_byte_to_lsb(unsigned char data, char *image_buffer) {
+    for (int i = 0; i < 8; i++) {
+        image_buffer[i] &= ~1;
+        image_buffer[i] |= data >> (7 - i);
+    }
+    return e_success;
+}
+
 Status do_encoding(EncodeInfo *encInfo) {
     // open files
     LOG_INFO(INFO_ENCODING_START);
