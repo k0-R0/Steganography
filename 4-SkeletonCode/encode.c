@@ -1,3 +1,4 @@
+#include "common.h"
 #include "encode.h"
 #include "logs.h"
 #include "types.h"
@@ -115,7 +116,7 @@ Status read_and_validate_encode_args(char **argv, EncodeInfo *encInfo) {
 
     encInfo->src_image_fname = argv[2];
     encInfo->secret_fname = argv[3];
-
+    encInfo->extn_secret_file = strstr(argv[3], ".");
     if (argv[4])
         encInfo->stego_image_fname = argv[4];
     else
@@ -133,8 +134,7 @@ Status check_capacity(EncodeInfo *encInfo) {
     // encoded text size =
     // magic string size + 1 unsigned char to represent magic string
 
-    char *magicString = "#*";
-    secret_size += strlen(magicString) + 1;
+    secret_size += strlen(MAGIC_STRING) + 1;
     // extension size + 1 unsigned char to represent extension size
 
     char *extension =
@@ -146,7 +146,6 @@ Status check_capacity(EncodeInfo *encInfo) {
 
     LOG_INFO(INFO_CHECK_CAPACITY);
     if (file_size < secret_size * 8) {
-        LOG_ERROR(ERR_INSUFFICIENT_CAPACITY);
         return e_failure;
     }
     LOG_INFO(INFO_CAPACITY_OK);
@@ -167,11 +166,76 @@ Status copy_bmp_header(FILE *fptr_src_image, FILE *fptr_dest_image) {
     return e_success;
 }
 
-Status encode_byte_to_lsb(unsigned char data, char *image_buffer) {
+Status encode_byte_to_lsb(unsigned char data, unsigned char *image_buffer) {
     for (int i = 0; i < 8; i++) {
         image_buffer[i] &= ~1;
         image_buffer[i] |= data >> (7 - i);
     }
+    return e_success;
+}
+
+Status encode_data_to_image(const char *data, int size, FILE *fptr_src_image,
+                            FILE *fptr_stego_image) {
+    LOG_INFO(INFO_ENCODING_START);
+    unsigned char image_buffer[8];
+
+    for (int i = 0; i < size; i++) {
+
+        if (fread(image_buffer, sizeof(image_buffer), 1, fptr_src_image) != 1) {
+            return e_failure;
+        }
+
+        encode_byte_to_lsb(data[i], image_buffer);
+
+        if (fwrite(image_buffer, sizeof(image_buffer), 1, fptr_stego_image) !=
+            1) {
+            return e_failure;
+        }
+    }
+
+    LOG_INFO(INFO_ENCODING_DONE);
+    return e_success;
+}
+
+Status encode_magic_string(const char *magic_string, EncodeInfo *encInfo) {
+    LOG_INFO(INFO_ENCODE_MAGIC);
+
+    if (encode_data_to_image(magic_string, strlen(magic_string),
+                             encInfo->fptr_src_image,
+                             encInfo->fptr_stego_image) == e_failure) {
+        LOG_ERROR(ERR_ENCODING_FAILED);
+        return e_failure;
+    }
+
+    LOG_INFO(INFO_ENCODING_DONE);
+    return e_success;
+}
+
+Status encode_secret_file_extn_size(EncodeInfo *encInfo) {
+    LOG_INFO(INFO_ENCODE_EXTENSION_SIZE);
+    char extn_size = strlen(encInfo->extn_secret_file) + 1;
+    if (encode_data_to_image(&extn_size, 1, encInfo->fptr_src_image,
+                             encInfo->fptr_stego_image) == e_failure) {
+        return e_failure;
+    }
+    return e_success;
+}
+
+Status encode_secret_file_extn(EncodeInfo *encInfo) {
+    LOG_INFO(INFO_ENCODE_EXTENSION);
+    if (encode_data_to_image(
+            encInfo->extn_secret_file, strlen(encInfo->extn_secret_file),
+            encInfo->fptr_src_image, encInfo->fptr_stego_image) == e_failure) {
+        return e_failure;
+    }
+    return e_success;
+}
+
+Status close_files(EncodeInfo *encInfo) {
+    LOG_INFO(ERR_CLOSE_FILES);
+    fclose(encInfo->fptr_stego_image);
+    fclose(encInfo->fptr_src_image);
+    fclose(encInfo->fptr_secret);
     return e_success;
 }
 
@@ -184,7 +248,7 @@ Status do_encoding(EncodeInfo *encInfo) {
     }
     // validate file size - header size > encode data size
     if (check_capacity(encInfo) == e_failure) {
-        LOG_ERROR(ERR_CAPACITY_CHECK);
+        LOG_ERROR(ERR_INSUFFICIENT_CAPACITY);
         return e_failure;
     }
     if (copy_bmp_header(encInfo->fptr_src_image, encInfo->fptr_stego_image) ==
@@ -193,10 +257,27 @@ Status do_encoding(EncodeInfo *encInfo) {
         return e_failure;
     }
     // encode magic
+    if (encode_magic_string(MAGIC_STRING, encInfo) == e_failure) {
+        LOG_ERROR(ERR_ENCODE_MAGIC);
+        return e_failure;
+    }
     // encode extension size
+    if (encode_secret_file_extn_size(encInfo) == e_failure) {
+        LOG_ERROR(ERR_ENCODE_EXTENSION_SIZE);
+        return e_failure;
+    }
     // encode extension name
+    if (encode_secret_file_extn(encInfo) == e_failure) {
+        LOG_ERROR(ERR_ENCODE_EXTENSION);
+        return e_failure;
+    }
     // encode secret file size
     // encode secret file
     // copy remaining data
+    // close all files
+    if (close_files(encInfo) == e_failure) {
+        LOG_ERROR(ERR_CLOSE_FILES);
+        return e_failure;
+    }
     return e_success;
 }
