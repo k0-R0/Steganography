@@ -14,8 +14,7 @@ int main(int argc, char *argv[]) {
     if (ret == e_unsupported) {
         LOG_ERROR(ERR_CHECK_OPERATION);
         return 0;
-    }
-    if (ret == e_encode) {
+    } else if (ret == e_encode) {
         if (argc < 4 || argc > 5 ||
             read_and_validate_encode_args(argv, &encInfo) == e_failure) {
             LOG_ERROR(ERR_CHECK_ARGUMENTS);

@@ -3,6 +3,7 @@
 #include "logs.h"
 #include "types.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 /* Function Definitions */
@@ -207,13 +208,12 @@ Status encode_magic_string(const char *magic_string, EncodeInfo *encInfo) {
         return e_failure;
     }
 
-    LOG_INFO(INFO_ENCODING_DONE);
     return e_success;
 }
 
 Status encode_secret_file_extn_size(EncodeInfo *encInfo) {
     LOG_INFO(INFO_ENCODE_EXTENSION_SIZE);
-    char extn_size = strlen(encInfo->extn_secret_file) + 1;
+    char extn_size = strlen(encInfo->extn_secret_file);
     if (encode_data_to_image(&extn_size, 1, encInfo->fptr_src_image,
                              encInfo->fptr_stego_image) == e_failure) {
         return e_failure;
@@ -231,17 +231,63 @@ Status encode_secret_file_extn(EncodeInfo *encInfo) {
     return e_success;
 }
 
+Status encode_secret_file_size(EncodeInfo *encInfo) {
+    LOG_INFO(INFO_ENCODE_FILE_SIZE);
+    char *sizeptr = (char *)&encInfo->size_secret_file;
+    if (encode_data_to_image(sizeptr, 4, encInfo->fptr_src_image,
+                             encInfo->fptr_stego_image) == e_failure) {
+        return e_failure;
+    }
+    return e_success;
+}
+
+Status encode_secret_file_data(EncodeInfo *encInfo) {
+    LOG_INFO(INFO_ENCODE_FILE_DATA);
+    char *secret_data = malloc(encInfo->size_secret_file);
+    fread(secret_data, encInfo->size_secret_file, 1, encInfo->fptr_secret);
+    if (encode_data_to_image(secret_data, encInfo->size_secret_file,
+                             encInfo->fptr_src_image,
+                             encInfo->fptr_stego_image) == e_failure) {
+        return e_failure;
+    }
+    free(secret_data);
+    return e_success;
+}
+
+Status copy_remaining_img_data(FILE *fptr_src, FILE *fptr_dest) {
+    LOG_INFO(INFO_COPY_REMAINING);
+
+    long unsigned curr_offset = ftell(fptr_src);
+    fseek(fptr_src, 0, SEEK_END);
+    long unsigned file_end = ftell(fptr_src);
+    fseek(fptr_src, curr_offset, SEEK_SET);
+    long unsigned remaining_size = file_end - curr_offset;
+
+    char *remaining_buffer = malloc(remaining_size);
+
+    if (fread(remaining_buffer, remaining_size, 1, fptr_src) != 1)
+        return e_failure;
+    if (fwrite(remaining_buffer, remaining_size, 1, fptr_dest) != 1)
+        return e_failure;
+
+    free(remaining_buffer);
+
+    return e_success;
+}
+
 Status close_files(EncodeInfo *encInfo) {
-    LOG_INFO(ERR_CLOSE_FILES);
-    fclose(encInfo->fptr_stego_image);
-    fclose(encInfo->fptr_src_image);
-    fclose(encInfo->fptr_secret);
+    LOG_INFO(INFO_CLOSE_FILES);
+    if (fclose(encInfo->fptr_stego_image) == EOF)
+        return e_failure;
+    if (fclose(encInfo->fptr_src_image) == EOF)
+        return e_failure;
+    if (fclose(encInfo->fptr_secret) == EOF)
+        return e_failure;
     return e_success;
 }
 
 Status do_encoding(EncodeInfo *encInfo) {
     // open files
-    LOG_INFO(INFO_ENCODING_START);
     if (open_files(encInfo) == e_failure) {
         LOG_ERROR(ERR_OPEN_FILES);
         return e_failure;
@@ -272,8 +318,21 @@ Status do_encoding(EncodeInfo *encInfo) {
         return e_failure;
     }
     // encode secret file size
+    if (encode_secret_file_size(encInfo) == e_failure) {
+        LOG_ERROR(ERR_ENCODE_FILE_SIZE);
+        return e_failure;
+    }
     // encode secret file
+    if (encode_secret_file_data(encInfo) == e_failure) {
+        LOG_ERROR(ERR_ENCODE_FILE_DATA);
+        return e_failure;
+    }
     // copy remaining data
+    if (copy_remaining_img_data(encInfo->fptr_src_image,
+                                encInfo->fptr_stego_image) == e_failure) {
+        LOG_ERROR(ERR_COPY_REMAINING);
+        return e_failure;
+    }
     // close all files
     if (close_files(encInfo) == e_failure) {
         LOG_ERROR(ERR_CLOSE_FILES);
