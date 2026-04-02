@@ -31,6 +31,21 @@
 #define INFO_ENCODING_DONE "## Encoding Done Successfully ##"
 
 /* =======================
+   INFO LOGS (DECODING)
+   ======================= */
+
+#define INFO_DECODING_START "## Decoding Procedure Started ##"
+#define INFO_OPENED_STEGO "Opened stego BMP file"
+#define INFO_SKIP_HEADER "Skipping Image Header"
+#define INFO_OPENED_DECODED "Opened output (decoded) file"
+#define INFO_DECODE_MAGIC "Decoding Magic String Signature"
+#define INFO_DECODE_EXTENSION_SIZE "Decoding file extension size"
+#define INFO_DECODE_EXTENSION "Decoding file extension"
+#define INFO_DECODE_FILE_SIZE "Decoding file size"
+#define INFO_DECODE_FILE_DATA "Decoding file data"
+#define INFO_DECODING_DONE "## Decoding Done Successfully ##"
+
+/* =======================
    ERROR LOGS
    ======================= */
 
@@ -59,6 +74,21 @@
 #define ERR_COPY_REMAINING "Failed to copy remaining data"
 #define ERR_ENCODING_FAILED "Encoding failed"
 
+/* =======================
+   ERROR LOGS (DECODING)
+   ======================= */
+
+#define ERR_DECODING_START "Failed to start decoding procedure"
+#define ERR_OPEN_STEGO "Failed to open stego BMP file"
+#define ERR_SKIP_HEADER "Failed to skip Image Header"
+#define ERR_OPEN_DECODED "Failed to create/open decoded output file"
+#define ERR_DECODE_MAGIC "Failed to decode magic string"
+#define ERR_INVALID_MAGIC "Magic string mismatch (not a valid stego file)"
+#define ERR_DECODE_EXTENSION_SIZE "Failed to decode file extension size"
+#define ERR_DECODE_EXTENSION "Failed to decode file extension"
+#define ERR_DECODE_FILE_SIZE "Failed to decode file size"
+#define ERR_DECODE_FILE_DATA "Failed to decode file data"
+#define ERR_DECODING_FAILED "Decoding failed"
 /* =======================
    OPTIONAL LOG HELPERS
    ======================= */

@@ -47,7 +47,7 @@ Status open_decode_files(DecodeInfo *decInfo) {
 }
 
 Status skip_bmp_header(FILE *fptr_src_image) {
-    LOG_INFO(INFO_COPY_HEADER);
+    LOG_INFO(INFO_SKIP_HEADER);
 
     if (fseek(fptr_src_image, BMP_HEADER_SIZE, SEEK_SET) != 0)
         return e_failure;
@@ -56,8 +56,6 @@ Status skip_bmp_header(FILE *fptr_src_image) {
 }
 
 Status decode_byte_from_lsb(char *ptr_data, unsigned char *image_buffer) {
-    LOG_INFO(INFO_ENCODING_START);
-
     unsigned char data = 0;
     for (int i = 0; i < 8; i++) {
         data <<= 1;
@@ -70,7 +68,7 @@ Status decode_byte_from_lsb(char *ptr_data, unsigned char *image_buffer) {
 }
 
 Status decode_data_from_image(char *data, int size, FILE *fptr_src_image) {
-    LOG_INFO(INFO_ENCODING_START);
+    LOG_INFO(INFO_DECODING_START);
 
     for (int i = 0; i < size; i++) {
         unsigned char image_buffer[8];
@@ -83,8 +81,9 @@ Status decode_data_from_image(char *data, int size, FILE *fptr_src_image) {
 
     return e_success;
 }
+
 Status decode_magic_string(DecodeInfo *decInfo) {
-    LOG_INFO(INFO_ENCODE_MAGIC);
+    LOG_INFO(INFO_DECODE_MAGIC);
 
     int magic_len = strlen(MAGIC_STRING);
     char *magic = malloc(magic_len);
@@ -93,7 +92,7 @@ Status decode_magic_string(DecodeInfo *decInfo) {
         e_failure)
         return e_failure;
 
-    printf("enter the magic string :-> ");
+    printf("enter the magic string :\n");
 
     char user_magic[magic_len];
     scanf("%s", user_magic);
@@ -101,14 +100,13 @@ Status decode_magic_string(DecodeInfo *decInfo) {
     if (strcmp((char *)magic, user_magic)) {
         return e_failure;
     }
-    printf("%s matches the magic string", magic);
-    free(magic);
 
+    free(magic);
     return e_success;
 }
 
 Status decode_secret_file_extn_size(DecodeInfo *decInfo) {
-    LOG_INFO(INFO_ENCODE_EXTENSION_SIZE);
+    LOG_INFO(INFO_DECODE_EXTENSION_SIZE);
 
     if (decode_data_from_image(&decInfo->size_extn_output_file, 1,
                                decInfo->fptr_src_image) == e_failure) {
@@ -119,7 +117,7 @@ Status decode_secret_file_extn_size(DecodeInfo *decInfo) {
 }
 
 Status decode_secret_file_extn(DecodeInfo *decInfo) {
-    LOG_INFO(INFO_CHECK_SECRET_SIZE);
+    LOG_INFO(INFO_DECODE_EXTENSION);
 
     char *output_file = malloc(strlen(decInfo->output_fname) +
                                decInfo->size_extn_output_file + 1);
@@ -141,7 +139,7 @@ Status decode_secret_file_extn(DecodeInfo *decInfo) {
 }
 
 Status decode_secret_file_size(DecodeInfo *decInfo) {
-    LOG_INFO(INFO_ENCODE_FILE_SIZE);
+    LOG_INFO(INFO_DECODE_FILE_SIZE);
 
     char *file_size = malloc(sizeof(int));
 
@@ -156,7 +154,7 @@ Status decode_secret_file_size(DecodeInfo *decInfo) {
 }
 
 Status decode_secret_file_data(DecodeInfo *decInfo) {
-    LOG_INFO(INFO_ENCODE_FILE_SIZE);
+    LOG_INFO(INFO_DECODE_FILE_DATA);
 
     char *file_data = malloc(decInfo->size_output_file);
 
@@ -203,32 +201,32 @@ Status do_decoding(DecodeInfo *decInfo) {
     }
 
     if (skip_bmp_header(decInfo->fptr_src_image) == e_failure) {
-        LOG_ERROR(ERR_COPY_HEADER);
+        LOG_ERROR(ERR_SKIP_HEADER);
         return e_failure;
     }
 
     if (decode_magic_string(decInfo) == e_failure) {
-        LOG_ERROR(ERR_ENCODE_MAGIC);
+        LOG_ERROR(ERR_DECODE_MAGIC);
         return e_failure;
     }
 
     if (decode_secret_file_extn_size(decInfo) == e_failure) {
-        LOG_ERROR(ERR_ENCODE_EXTENSION_SIZE);
+        LOG_ERROR(ERR_DECODE_EXTENSION_SIZE);
         return e_failure;
     }
 
     if (decode_secret_file_extn(decInfo) == e_failure) {
-        LOG_ERROR(ERR_ENCODE_EXTENSION);
+        LOG_ERROR(ERR_DECODE_EXTENSION);
         return e_failure;
     }
 
     if (decode_secret_file_size(decInfo) == e_failure) {
-        LOG_ERROR(ERR_ENCODE_FILE_SIZE);
+        LOG_ERROR(ERR_DECODE_FILE_SIZE);
         return e_failure;
     }
 
     if (decode_secret_file_data(decInfo) == e_failure) {
-        LOG_ERROR(ERR_ENCODE_FILE_DATA);
+        LOG_ERROR(ERR_DECODE_FILE_DATA);
         return e_failure;
     }
 
