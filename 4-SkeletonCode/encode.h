@@ -11,23 +11,15 @@
  * also stored
  */
 
-#define MAX_SECRET_BUF_SIZE 1
-#define MAX_IMAGE_BUF_SIZE (MAX_SECRET_BUF_SIZE * 8)
-#define BMP_HEADER_SIZE 54
-
 typedef struct _EncodeInfo {
     /* Source Image info */
     char *src_image_fname;
     FILE *fptr_src_image;
-    uint image_capacity;
-    uint bits_per_pixel;
-    char image_data[MAX_IMAGE_BUF_SIZE];
 
     /* Secret File Info */
     char *secret_fname;
     FILE *fptr_secret;
     char *extn_secret_file;
-    char secret_data[MAX_SECRET_BUF_SIZE];
     uint size_secret_file;
 
     /* Stego Image Info */
@@ -38,9 +30,6 @@ typedef struct _EncodeInfo {
 
 /* Encoding function prototype */
 
-/* Check operation type */
-OperationType check_operation_type(char *arg);
-
 /* Read and validate Encode args from argv */
 Status read_and_validate_encode_args(char *argv[], EncodeInfo *encInfo);
 
@@ -48,7 +37,7 @@ Status read_and_validate_encode_args(char *argv[], EncodeInfo *encInfo);
 Status do_encoding(EncodeInfo *encInfo);
 
 /* Get File pointers for i/p and o/p files */
-Status open_files(EncodeInfo *encInfo);
+Status open_encode_files(EncodeInfo *encInfo);
 
 /* check capacity */
 Status check_capacity(EncodeInfo *encInfo);
@@ -88,6 +77,6 @@ Status encode_byte_to_lsb(unsigned char data, unsigned char *image_buffer);
 Status copy_remaining_img_data(FILE *fptr_src, FILE *fptr_dest);
 
 /* Close all files while exiting*/
-Status close_files(EncodeInfo *encInfo);
+Status close_encode_files(EncodeInfo *encInfo);
 
 #endif

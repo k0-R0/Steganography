@@ -47,7 +47,7 @@ uint get_file_size(FILE *fptr) {
  * Output: FILE pointer for above files
  * Return Value: e_success or e_failure, on file errors
  */
-Status open_files(EncodeInfo *encInfo) {
+Status open_encode_files(EncodeInfo *encInfo) {
     // Src Image file
     LOG_INFO(INFO_OPEN_FILES);
     encInfo->fptr_src_image = fopen(encInfo->src_image_fname, "r");
@@ -275,7 +275,7 @@ Status copy_remaining_img_data(FILE *fptr_src, FILE *fptr_dest) {
     return e_success;
 }
 
-Status close_files(EncodeInfo *encInfo) {
+Status close_encode_files(EncodeInfo *encInfo) {
     LOG_INFO(INFO_CLOSE_FILES);
     if (fclose(encInfo->fptr_stego_image) == EOF)
         return e_failure;
@@ -288,7 +288,7 @@ Status close_files(EncodeInfo *encInfo) {
 
 Status do_encoding(EncodeInfo *encInfo) {
     // open files
-    if (open_files(encInfo) == e_failure) {
+    if (open_encode_files(encInfo) == e_failure) {
         LOG_ERROR(ERR_OPEN_FILES);
         return e_failure;
     }
@@ -334,7 +334,7 @@ Status do_encoding(EncodeInfo *encInfo) {
         return e_failure;
     }
     // close all files
-    if (close_files(encInfo) == e_failure) {
+    if (close_encode_files(encInfo) == e_failure) {
         LOG_ERROR(ERR_CLOSE_FILES);
         return e_failure;
     }
