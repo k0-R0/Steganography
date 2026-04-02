@@ -17,10 +17,10 @@ typedef struct _DecodeInfo {
     FILE *fptr_src_image;
 
     /* Secret File Info */
-    char *secret_fname;
-    FILE *fptr_secret;
-    char *extn_secret_file;
-    uint size_secret_file;
+    char *output_fname;
+    FILE *fptr_output;
+    char size_extn_output_file;
+    uint size_output_file;
 
 } DecodeInfo;
 
@@ -36,10 +36,10 @@ Status do_decoding(DecodeInfo *decInfo);
 Status open_decode_files(DecodeInfo *decInfo);
 
 /* Skip bmp image header */
-Status skip_bmp_header(FILE *fptr_src_image, FILE *fptr_dest_image);
+Status skip_bmp_header(FILE *fptr_src_image);
 
 /* Store Magic String */
-Status decode_magic_string(const char *magic_string, DecodeInfo *decInfo);
+Status decode_magic_string(DecodeInfo *decInfo);
 
 /* Decode secret file extenstion size */
 Status decode_secret_file_extn_size(DecodeInfo *decInfo);
@@ -54,11 +54,10 @@ Status decode_secret_file_size(DecodeInfo *decInfo);
 Status decode_secret_file_data(DecodeInfo *decInfo);
 
 /* Decode function, which does the real encoding */
-Status decode_data_from_image(const char *data, int size, FILE *fptr_src_image,
-                              FILE *fptr_stego_image);
+Status decode_data_from_image(char *data, int size, FILE *fptr_src_image);
 
 /* Decode a byte into LSB of image data array */
-Status decode_byte_from_lsb(unsigned char data, unsigned char *image_buffer);
+Status decode_byte_from_lsb(char *ptr_data, unsigned char *image_buffer);
 
 /* Close all files while exiting*/
 Status close_decode_files(DecodeInfo *decInfo);
