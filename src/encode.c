@@ -82,16 +82,6 @@ Status open_encode_files(EncodeInfo *encInfo) {
     return e_success;
 }
 
-OperationType check_operation_type(char *arg) {
-    LOG_INFO(INFO_CHECK_OPERATION);
-    if (strcmp(arg, "-e") == 0)
-        return e_encode;
-    else if (strcmp(arg, "-d") == 0)
-        return e_decode;
-    else
-        return e_unsupported;
-}
-
 Status read_and_validate_encode_args(char **argv, EncodeInfo *encInfo) {
     // check .bmp file
     LOG_INFO(INFO_CHECK_ARGUMENTS);

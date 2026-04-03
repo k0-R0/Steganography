@@ -1,8 +1,19 @@
-#include "common.h"
 #include "decode.h"
 #include "encode.h"
 #include "logs.h"
 #include "types.h"
+#include <string.h>
+
+/* Check operation type */
+OperationType check_operation_type(char *arg) {
+    LOG_INFO(INFO_CHECK_OPERATION);
+    if (strcmp(arg, "-e") == 0)
+        return e_encode;
+    else if (strcmp(arg, "-d") == 0)
+        return e_decode;
+    else
+        return e_unsupported;
+}
 
 int main(int argc, char *argv[]) {
 
