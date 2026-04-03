@@ -86,32 +86,32 @@ Status read_and_validate_encode_args(char **argv, EncodeInfo *encInfo) {
     // check .bmp file
     LOG_INFO(INFO_CHECK_ARGUMENTS);
 
-    if (strstr(argv[2], ".bmp") == NULL) {
+    char *src_fname_extn = strstr(argv[2], ".bmp");
+    if (src_fname_extn == NULL || strcmp(src_fname_extn, ".bmp")) {
         LOG_ERROR(ERR_INVALID_BMP);
         return e_failure;
     }
-    // check . present in secret file
+    encInfo->src_image_fname = argv[2];
 
+    // check . present in secret file
     if (strchr(argv[3], '.') == NULL) {
         LOG_ERROR(ERR_INVALID_SECRET);
         return e_failure;
     }
-    // check if output file is present
-    // if not default
-
-    if (argv[4] && strstr(argv[4], ".bmp") == NULL) {
-        LOG_ERROR(ERR_INVALID_OUTPUT);
-        return e_failure;
-    }
-    // else validate it to be .bmp file as well
-
-    encInfo->src_image_fname = argv[2];
     encInfo->secret_fname = argv[3];
     encInfo->extn_secret_file = strstr(argv[3], ".");
-    if (argv[4])
+
+    // check if output file is present and validate
+    // if not default
+    if (argv[4]) {
+        char *steg_fname_extn = strstr(argv[4], ".bmp");
+        if (steg_fname_extn == NULL || strcmp(steg_fname_extn, ".bmp")) {
+            LOG_ERROR(ERR_INVALID_OUTPUT);
+            return e_failure;
+        }
         encInfo->stego_image_fname = argv[4];
-    else
-        encInfo->stego_image_fname = "4-SkeletonCode/stego_img.bmp";
+    } else
+        encInfo->stego_image_fname = "stego_img.bmp";
 
     return e_success;
 }

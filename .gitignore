@@ -2,5 +2,5 @@
 /*.txt
 /build
 .cache
-/4-SkeletonCode/stego_img.bmp
+stego_img.bmp
 /src/*.bmp

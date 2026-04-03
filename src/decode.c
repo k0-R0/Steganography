@@ -17,20 +17,16 @@
 Status read_and_validate_decode_args(char *argv[], DecodeInfo *decInfo) {
 
     LOG_INFO(INFO_CHECK_ARGUMENTS);
-    if (strstr(argv[2], ".bmp") == NULL) {
+    char *src_fname_extn = strstr(argv[2], ".bmp");
+    if (src_fname_extn == NULL || strcmp(src_fname_extn, ".bmp")) {
         LOG_ERROR(ERR_INVALID_BMP);
         return e_failure;
     }
     decInfo->src_image_fname = argv[2];
 
-    if (argv[3] && strstr(argv[3], ".") != NULL) {
-        LOG_ERROR(ERR_INVALID_OUTPUT);
-        return e_failure;
-    }
-
-    else if (argv[3])
-        decInfo->output_fname = argv[3];
-    else
+    if (argv[3]) {
+        decInfo->output_fname = strtok(argv[3], ".");
+    } else
         decInfo->output_fname = "output";
 
     return e_success;
