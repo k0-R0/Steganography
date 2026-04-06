@@ -6,17 +6,15 @@
 
 /*
  * Structure to store information required for
- * encoding secret file to source Image
- * Info about output and intermediate data is
- * also stored
+ * decoding secret file from source Image
  */
 
 typedef struct _DecodeInfo {
-    /* Source Image info */
+    /* Encoded (Source) Image info */
     char *src_image_fname;
     FILE *fptr_src_image;
 
-    /* Secret File Info */
+    /* Decoded File Info */
     char *output_fname;
     FILE *fptr_output;
     char size_extn_output_file;
@@ -38,7 +36,7 @@ Status open_decode_files(DecodeInfo *decInfo);
 /* Skip bmp image header */
 Status skip_bmp_header(FILE *fptr_src_image);
 
-/* Store Magic String */
+/* Decode Magic String */
 Status decode_magic_string(DecodeInfo *decInfo);
 
 /* Decode secret file extenstion size */
@@ -53,7 +51,7 @@ Status decode_secret_file_size(DecodeInfo *decInfo);
 /* Decode secret file data*/
 Status decode_secret_file_data(DecodeInfo *decInfo);
 
-/* Decode function, which does the real encoding */
+/* Decode function, which does the real decoding */
 Status decode_data_from_image(char *data, int size, FILE *fptr_src_image);
 
 /* Decode a byte into LSB of image data array */
